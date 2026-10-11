@@ -1,0 +1,25 @@
+# Use a separate project name and an HTTPS reverse proxy in front of the API.
+services:
+  postgres:
+    ports: !override []
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a production database password}
+    restart: unless-stopped
+  redis:
+    ports: !override []
+    restart: unless-stopped
+  api:
+    ports: !override
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set the URL for the production postgres service}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set a production admin password}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?Set a random production session secret}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:?Set the Razorpay key ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:?Set the Razorpay key secret}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:?Set the Razorpay webhook secret}
+      PUBLIC_URL: ${PUBLIC_URL:?Set the HTTPS storefront URL}
+      COOKIE_SECURE: "true"
+      STOREFRONT_MODE: "true"
+      AUTO_CREATE_SCHEMA: "false"
+    restart: unless-stopped

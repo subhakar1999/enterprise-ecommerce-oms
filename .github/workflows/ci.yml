@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: oms
+          POSTGRES_USER: oms
+          POSTGRES_PASSWORD: oms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oms -d oms"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgresql+asyncpg://oms:oms@localhost:5432/oms
+      REDIS_URL: redis://localhost:6379/0
+      PAYMENT_WEBHOOK_SECRET: ci-webhook-secret
+      AUTO_CREATE_SCHEMA: "false"
+      WORKER_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run integration tests
+        run: pytest -q
+      - name: Verify Docker build
+        run: docker build -t enterprise-oms:${{ github.sha }} .

@@ -1,0 +1,9 @@
+# Use a separate Compose project so tests cannot affect the development database:
+# docker compose -p oms-tests -f docker-compose.yml -f compose.test.yml up -d postgres redis
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:55432:5432"
+  redis:
+    ports: !override
+      - "127.0.0.1:56379:6379"
